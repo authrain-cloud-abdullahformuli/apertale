@@ -1,0 +1,55 @@
+# Apertale — WebMCP Challenge Readiness
+
+> Status: submitted on time; judging period 2026-09-04 – 2026-09-21 PT
+>
+> Checked: 2026-09-12 NZST
+> Official deadline: 2026-09-03 1:00 p.m. PDT (Submission closed; the Project may still be maintained per Devpost rules §6)
+
+This matrix is the current delivery truth for Apertale. A row is only marked passed when its evidence exists in the current workspace or live destination.
+
+## Product and engineering
+
+| Gate | State | Current evidence |
+|---|---|---|
+| Five independent books | Passed | The Field Guide plus four Sample Books have unique IDs and spread counts `4 / 8 / 6 / 5 / 5`; switching books preserves each book's own revision and edits. |
+| Three.js open book and page turn | Passed locally | Five-point browser capture shows the next page during the turn without tearing; five geometry regressions reject endpoint drift and centreline self-intersection. Production turns measured 58 and 56 FPS against the 45 FPS floor. |
+| Illustrated knowledge samples | Passed locally | Eight landmark and six science panoramas are dedicated ImageGen spreads kept as compatibility-tested PNG; the storm includes a transparent three-frame lightning sequence. The runtime ships no GLB/model payload. |
+| Human and Agent share project state | Passed locally | Both paths use the same revisioned `BookEngine`, validation, provenance, idempotency, conflict handling, and exact undo records. |
+| WebMCP tool catalog | Eight verified in production (2026-09-12, site version 53, commit 412aa0f) | The current runtime registers the prior six document/presentation tools plus `sketch_storyboard` (labelled pencil plan, interpreted red marks, storyboard-revision conflict protection) and `request_image_handoff` (`source-photo` / `book-art`). The 2026-09-02 publish (Codex in-app browser) fetched all eight tools from the public origin and confirmed the `images`/`split` handoff schema, `marks` storyboard schema, and `storyboard` context detail. |
+| WebMCP lifecycle and security contract | Passed in production (site version 53) | All eight registrations are awaited as one fail-closed set, tolerate a host without an execution `AbortSignal`, validate inputs again in code, return compact strings, and carry explicit `readOnlyHint` / `untrustedContentHint` annotations; `manage_book` also carries `consequentialHint`. The public Worker emits `Origin-Agent-Cluster: ?1` and `Permissions-Policy: tools=(self)` on the 2026-09-12 deployment. |
+| Shared reader WebMCP surface | Passed in production (2026-09-12, site version 53) | The anonymous share page registers exactly one read-only tool, `get_shared_book_context` (`readOnlyHint: true`, `untrustedContentHint: true`); the ChatGPT desktop host discovered only that tool on a live share link, read the visible spread, tracked a human page turn (`index` 0 → 1), and returned all four spreads with `scope: "book"`. None of the eight authoring tools appear on the share page. |
+| Deployment HTTP verifier | Passed for the eight-tool catalog on 2026-09-02 and re-verified 2026-09-12 | `npm run verify:deployment -- URL` passed against the public Site after v9 for Apertale 1.1.0, the prior six identifiers, and both required host policy headers. The verifier derives the eight-tool catalog from the manifest and returned `ok: true` with both policy headers against site version 53 on 2026-09-12; the live share page serves the `index-BzXV9PYO.js` build from commit 412aa0f. |
+| Image import and persistence | Passed locally | PNG/JPEG/WebP sources up to 12 MB are alpha-aware resized/compressed in the browser to at most 1.5 MB, persist in IndexedDB under stable IDs with optimization metadata, are discoverable across books, and are accepted by scene patches only after the trusted local adapter confirms the ID exists. |
+| Day/Night, hover, click, drag, Preview | Passed | Story spreads and the animated storm carry authored hover, focus, click, motion, and reveal contracts; final public mobile verification switched the shared reader to Night while keeping the reader read-only. |
+| Reduced motion and 2D fallback | Passed locally | Forced fallback route and reduced-motion navigation passed; the shelf falls back to a real cover gallery instead of an empty centre. |
+| Accessibility baseline | Passed locally | Named controls, keyboard page navigation, modal autofocus, focus trap, Escape close, and semantic fallback navigation. |
+| Local code quality gates | Passed except the separate cutout gate below | The current simplify-plus-hygiene tree passed typecheck, 132/132 Vitest tests, production build, 19/19 built Sites tests, and `git diff --check`. The current creation-quality-loop verification record is [`../app/qa/creation-quality-loop-2026-08-29/REPORT.md`](../app/qa/creation-quality-loop-2026-08-29/REPORT.md); earlier dated QA screenshot evidence was pruned from the working tree on 2026-09-01 (recover from git history at commit `abec1ea` or earlier); the release-gate and performance text records remain under [`../app/qa/`](../app/qa/). The 2026-08-28 production closeout record remains in [`qa/livingbook-final-closeout-2026-08-28/REPORT.md`](qa/livingbook-final-closeout-2026-08-28/REPORT.md). |
+| Runtime cutout asset gate | Blocked | The current alpha/padding audit passes 16 assets and rejects 41 still-referenced v2 cutouts after 25 retired cutouts were removed. Contact-sheet review also found clipped subjects, detached fragments, and edge contamination, so the remaining set requires genuine regeneration rather than padding-only repair. |
+
+## External challenge delivery
+
+| Gate | State | Current evidence / completion condition |
+|---|---|---|
+| Editable Figma final baseline | Passed | [`Apertale — Product Design v1.1`](https://www.figma.com/design/3Kq19oItsbBczMIeB739cO/Apertale-%E2%80%94-Product-Design-v1.1?node-id=7-6) contains the editable Day, Library, and Night layout baseline. Runtime implementation has since expanded the library from four samples to a Guide plus four samples without changing the approved anatomy and tokens. |
+| Real ChatGPT WebMCP host run | Eight tools discovered and `get_project_context` executed on production 2026-09-02; full create runs (storyboard, inline WebP handoff, atomic create) passed three times on the local dev build the same day; a production end-to-end create is the remaining rerun | The genuine desktop in-app Browser host discovered the prior exact six tools, created separate text-led and photo-led books, and called the final production `get_project_context`. Only `com.openai.codex` was installed, so this is not mislabeled as a separately installed ChatGPT desktop binary. A fresh run must also exercise `sketch_storyboard` and `request_image_handoff` after deployment. |
+| Working judge-accessible live URL | Passed | `https://livingbook-studio-challenge-11.mike007jd2.chatgpt.site/` is public, returns HTML 200, and serves the retained anonymous share link recorded in the final QA report. |
+| Public source repository | Passed | [github.com/mike007jd/apertale](https://github.com/mike007jd/apertale) is public with source, assets, instructions, and the MIT license; visibility verified 2026-09-12. |
+| Public demo video under 3 minutes | Passed | [vimeo.com/1223632817](https://vimeo.com/1223632817), public, with audio, following the storyboard-loop script in `SUBMISSION_DRAFT.md`. |
+| Source-true submission media | Passed locally | [`SUBMISSION_MEDIA.md`](SUBMISSION_MEDIA.md) selects current implementation captures, captions, alt text, and the six required recording beats without using historical mockups as product evidence. |
+| Devpost submission | Passed | Submitted before the 2026-09-03 1:00 p.m. PDT deadline with the live URL, public repository, public video, and project description. |
+
+## Official requirements used for this gate
+
+According to the current official pages, judging covers usefulness, originality, execution, thoughtful WebMCP use, and human-Agent experience. The submission requires a working live URL, explanatory text, a public demo video shorter than three minutes with audio, and a public open-source repository containing source, assets, instructions, and a visible license.
+
+- [OpenAI WebMCP Challenge](https://openai.com/webmcp-challenge/)
+- [Official Devpost requirements](https://webmcp.devpost.com/)
+- [OpenAI: Using site tools in the ChatGPT desktop app](https://help.openai.com/en/articles/20001423-using-site-tools-in-the-chatgpt-desktop-app)
+- [Chrome WebMCP Imperative API](https://developer.chrome.com/docs/ai/webmcp/imperative-api)
+- [Chrome WebMCP tool security](https://developer.chrome.com/docs/ai/webmcp/secure-tools)
+
+## Release stop condition
+
+The project is ready to submit only when every external-delivery row is passed against its real destination. Local product completion alone is not submission completion.
+
+Use [`SITE_TOOLS_ACCEPTANCE.md`](SITE_TOOLS_ACCEPTANCE.md) as the exact deployment and host-loop evidence procedure.

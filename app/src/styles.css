@@ -1,0 +1,2970 @@
+/* Every scale lives in design/tokens.css, which main.tsx imports
+   first. This file may consume tokens; it must never redefine one. The only
+   custom properties declared here are the two the renderer writes at runtime. */
+
+:root {
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background: #efe9df;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  /* Written every frame by ThreeBook when an element is focused. */
+  --selection-x: 50vw;
+  --selection-y: 42%;
+}
+
+:root[data-theme="night"] {
+  background: #100d0a;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+dialog {
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+}
+
+dialog::backdrop { background: transparent; }
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+button, select { font: inherit; }
+button {
+  color: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Four states for every control, in one rule.
+ *
+ * Before this, 8 of 63 controls had any transition, 9 changed on hover with
+ * none declared so the change snapped, and 16 had no hover, press or focus
+ * state at all. That was structural, not an oversight: there was no shared
+ * place to put it, so each control either got hand-written states or got none.
+ *
+ * Press uses the independent `scale` property rather than `transform`, which
+ * is what makes one global rule possible — `scale` composes with the rotations
+ * and translations the shelf cards and page arrows already own, instead of
+ * overwriting them. */
+button,
+select,
+summary {
+  transition:
+    scale var(--motion-feedback) var(--ease-object),
+    box-shadow var(--motion-feedback) var(--ease-info),
+    background-color var(--motion-feedback) var(--ease-info),
+    border-color var(--motion-feedback) var(--ease-info),
+    color var(--motion-feedback) var(--ease-info),
+    opacity var(--motion-feedback) var(--ease-info),
+    filter var(--motion-feedback) var(--ease-info);
+}
+
+button:hover:not(:disabled) {
+  scale: 1.015;
+}
+
+/* A control sinks quickly and returns on the object easing, the way a physical
+   key does. Symmetric timing reads as a light switch, not as a press. */
+button:active:not(:disabled) {
+  scale: .965;
+  transition-duration: var(--motion-press);
+}
+
+button:disabled,
+select:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:hover:not(:disabled), button:active:not(:disabled) { scale: 1; }
+}
+
+.app-shell {
+  position: relative;
+  width: 100%;
+  min-width: 320px;
+  height: 100%;
+  isolation: isolate;
+  background: #f4f0e8;
+  transition: color var(--motion-theme) var(--ease-info), background-color var(--motion-theme) var(--ease-info);
+}
+
+.app-shell::before,
+.app-shell::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  z-index: -2;
+  background-position: center;
+  background-size: cover;
+  transition: opacity var(--motion-theme) var(--ease-info);
+}
+
+.app-shell::before {
+  background-image: url("/assets/generated/day-background.webp");
+  opacity: 0.58;
+}
+
+.app-shell::after {
+  opacity: 0;
+}
+
+:root[data-theme="night"] .app-shell::before { opacity: 0; }
+:root[data-theme="night"] .app-shell {
+  background-color: #100d0a;
+  background-image: url("/assets/generated/night-background.webp");
+  background-position: center;
+  background-size: cover;
+}
+:root[data-theme="night"] .app-shell::after {
+  background-image: url("/assets/generated/night-background.webp");
+  opacity: 1;
+}
+.app-shell::selection { background: var(--accent-soft); }
+
+.portrait-orientation-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding:
+    max(24px, env(safe-area-inset-top))
+    max(22px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom))
+    max(22px, env(safe-area-inset-left));
+  color: var(--ink);
+  background: #f4f0e8 url("/assets/generated/day-background.webp") center / cover;
+}
+
+.portrait-orientation-gate::backdrop { background: #f4f0e8; }
+
+:root[data-theme="night"] .portrait-orientation-gate {
+  background: #100d0a url("/assets/generated/night-background.webp") center / cover;
+}
+
+:root[data-theme="night"] .portrait-orientation-gate::backdrop { background: #100d0a; }
+
+.portrait-orientation-gate[open] { display: grid; place-items: center; align-content: center; text-align: center; }
+
+.portrait-orientation-phone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin-bottom: 28px;
+  color: var(--status-danger);
+  animation: portrait-phone-turn 3.2s var(--ease-navigation) infinite;
+}
+
+.portrait-orientation-book {
+  position: absolute;
+  opacity: 0;
+  animation: portrait-book-landscape 3.2s var(--ease-navigation) infinite;
+}
+
+.portrait-orientation-gate h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-display-s);
+  line-height: var(--leading-display-s);
+  letter-spacing: var(--track-tight);
+}
+
+.portrait-orientation-gate button {
+  margin-top: 20px;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 0 12px;
+  color: var(--ink-2);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--text-caption);
+  font-weight: var(--weight-strong);
+}
+
+:root[data-theme="night"] .portrait-orientation-phone { color: var(--accent); }
+
+@keyframes portrait-phone-turn {
+  0%, 18% { opacity: .68; transform: rotate(0deg) scale(.9); }
+  28% { opacity: 1; transform: rotate(0deg) scale(1); }
+  58%, 80% { opacity: 1; transform: rotate(90deg) scale(1.04); }
+  94%, 100% { opacity: 0; transform: rotate(90deg) scale(.98); }
+}
+
+@keyframes portrait-book-landscape {
+  0%, 50% { opacity: 0; transform: rotate(-90deg) scale(.72); }
+  60%, 82% { opacity: 1; transform: rotate(-90deg) scale(1); }
+  94%, 100% { opacity: 0; transform: rotate(-90deg) scale(.9); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait-orientation-phone,
+  .portrait-orientation-book { animation: none !important; }
+  .portrait-orientation-phone { opacity: 1; transform: rotate(90deg); }
+  .portrait-orientation-book { opacity: 1; transform: rotate(-90deg); }
+}
+
+:root[data-motion="reduced"] .portrait-orientation-phone,
+:root[data-motion="reduced"] .portrait-orientation-book { animation: none !important; }
+:root[data-motion="reduced"] .portrait-orientation-phone { opacity: 1; transform: rotate(90deg); }
+:root[data-motion="reduced"] .portrait-orientation-book { opacity: 1; transform: rotate(-90deg); }
+
+.topbar {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 86px;
+  padding: 20px clamp(22px, 3.2vw, 52px);
+  pointer-events: none;
+}
+
+.wordmark {
+  grid-column: 2;
+  border: 0;
+  padding: 6px 10px;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.library-button {
+  grid-column: 1;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  border-radius: var(--radius-pill);
+  padding: 0 15px;
+  color: var(--ink);
+  background: var(--surface-strong);
+  box-shadow: var(--elev-2);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.topbar-actions {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.book-library {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  color: #211b16;
+  background: #e8dece;
+}
+
+.book-library.is-opening-book .library-sheet,
+.book-library.is-closing-book .library-sheet {
+  pointer-events: none;
+}
+
+.book-library:is(.is-opening-book, .is-closing-book) button:disabled { opacity: 1; }
+
+.library-atmosphere {
+  position: absolute;
+  inset: 0;
+  background: url("/assets/generated/day-background.webp") center / cover;
+  opacity: .55;
+  filter: saturate(.64) brightness(1.08);
+  transition: opacity var(--motion-theme) var(--ease-info), filter var(--motion-theme) var(--ease-info);
+}
+
+:root[data-theme="night"] .book-library { color: #f6eedf; background: #120d09; }
+:root[data-theme="night"] .library-atmosphere {
+  background-image: url("/assets/generated/night-background.webp");
+  opacity: .52;
+  filter: saturate(.82) brightness(.62);
+}
+
+/* The library is a fixed frame, not one long clipped canvas: topbar, hero,
+   actions and footer hold their place while only the shelf region scrolls. */
+.library-sheet {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.8vh, 22px);
+  overflow: hidden;
+  padding: clamp(18px, 2.4vw, 38px) clamp(20px, 4vw, 64px) clamp(14px, 1.8vw, 26px);
+  pointer-events: none;
+}
+
+.library-topbar,
+.library-intro,
+.library-tabs,
+.demo-disclosure { flex: 0 0 auto; }
+
+.library-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  pointer-events: auto;
+}
+
+.library-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  padding: 7px 0;
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  background: transparent;
+  cursor: pointer;
+}
+
+.library-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.library-close {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--shape-circle);
+  background: var(--surface-strong);
+  box-shadow: var(--elev-2);
+  cursor: pointer;
+}
+
+.library-close:disabled { opacity: .48; cursor: wait; }
+
+.library-intro {
+  width: min(690px, 100%);
+  margin: clamp(var(--space-1), 1.2vh, var(--space-4)) auto 0;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.library-intro > p {
+  margin: 0 0 var(--space-2);
+  color: var(--accent);
+  font-size: var(--text-caption);
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.library-intro h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-display-l);
+  line-height: .95;
+  letter-spacing: -.045em;
+}
+
+.library-intro > span {
+  display: block;
+  max-width: 500px;
+  margin: var(--space-3) auto 0;
+  color: var(--muted);
+  font-size: var(--text-body);
+  line-height: 1.55;
+}
+
+.library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  justify-content: center;
+}
+
+.create-codex-button,
+.guide-book-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 45px;
+  border-radius: var(--radius-pill);
+  padding: 0 var(--space-4);
+  cursor: pointer;
+}
+
+.create-codex-button {
+  border: 1px solid color-mix(in srgb, var(--accent) 72%, transparent);
+  color: #fff;
+  background: var(--accent);
+  box-shadow: var(--elev-accent-rest);
+}
+
+.guide-book-button {
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface);
+}
+
+/* Compact segmented control. Personal books lead; the counts stay quiet so the
+   control reads as navigation rather than a statistics strip. */
+.library-tabs {
+  display: flex;
+  gap: 2px;
+  align-self: center;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  pointer-events: auto;
+}
+
+.library-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 35px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 0 15px;
+  color: var(--muted);
+  font-size: var(--text-body);
+  font-weight: var(--weight-strong);
+  letter-spacing: -.005em;
+  white-space: nowrap;
+  background: transparent;
+  cursor: pointer;
+}
+
+.library-tabs button:disabled { cursor: wait; }
+
+.library-tabs button.is-active {
+  color: var(--ink);
+  background: var(--surface-strong);
+  box-shadow: var(--ring-inset-accent);
+}
+
+.library-tab-count {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-text);
+  font-variant-numeric: tabular-nums;
+  opacity: .55;
+}
+
+/* Only this region scrolls, so a clipped last row is always reachable rather
+   than sitting below the fold of a page that cannot move. */
+.library-shelf {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: var(--space-6) var(--space-5);
+  scrollbar-width: thin;
+  pointer-events: auto;
+}
+
+.library-shelf:focus-visible {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: -3px;
+  border-radius: var(--radius-m);
+}
+
+.library-gallery {
+  display: grid;
+  /* Five hardcovers must sit in one row at the primary 1280px canvas — the
+     library is a shelf, not a grid. 5×196 + 4×32 = 1108 inside 1167. The old
+     208px track plus a 42px gap needed 1173 and had silently wrapped the fifth
+     book onto a clipped second row since before the token work. */
+  grid-template-columns: repeat(auto-fit, minmax(0, var(--library-track, 196px)));
+  justify-content: center;
+  align-items: start;
+  gap: clamp(18px, 2.6vw, 32px);
+  width: min(100%, 1240px);
+  margin-inline: auto;
+  /* A focused or hovered hardcover rises inside this scrolling frame. The old
+     12px cap was smaller than that lift, so the scrollport cut the cover and
+     its shadow along one hard horizontal line. Keep the sides and foot compact
+     while reserving a real motion gutter above the books. */
+  padding: var(--space-6) var(--space-2) var(--space-3);
+  perspective: 1400px;
+}
+
+.library-card-shell {
+  position: relative;
+  min-width: 0;
+  scroll-margin-block: var(--space-6) var(--space-5);
+  transform: translateY(var(--book-shift, 0)) rotate(var(--book-rotation, 0deg));
+  transform-origin: 50% 100%;
+  transition: transform var(--motion-state) var(--ease-object), filter var(--motion-state) var(--ease-info);
+}
+
+.library-card {
+  display: grid;
+  align-content: end;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  text-align: center;
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.library-card-shell.is-active { transform: translateY(calc(var(--book-shift, 0) - 5px)) rotate(var(--book-rotation, 0deg)); }
+.library-card-shell.is-opening {
+  transform: translateY(-16px) rotate(0deg) scale(1.03);
+  filter: saturate(1.08);
+}
+.library-card-shell.is-handoff { visibility: hidden; }
+.library-card:disabled:not(.is-opening) { cursor: wait; }
+.library-wordmark:disabled,
+.library-actions button:disabled,
+.library-topbar-actions button:disabled { opacity: .56; cursor: wait; }
+.library-card-shell:hover,
+.library-card-shell:focus-within { transform: translateY(-8px) rotate(0deg) scale(1.025); filter: saturate(1.05); }
+.library-card-1 { --book-rotation: -3deg; --book-shift: 9px; }
+.library-card-2 { --book-rotation: 1.5deg; --book-shift: 1px; }
+.library-card-3 { --book-rotation: -1deg; --book-shift: 5px; }
+.library-card-4 { --book-rotation: 2.5deg; --book-shift: 8px; }
+.library-card-5 { --book-rotation: -1.8deg; --book-shift: 3px; }
+
+.library-cover-frame {
+  position: relative;
+  display: block;
+  width: min(100%, 176px);
+  margin: auto;
+}
+
+.library-opening-badge {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 27px;
+  border: 1px solid rgba(255,255,255,.42);
+  border-radius: var(--radius-pill);
+  padding: 0 9px;
+  color: #fff;
+  background: rgba(24, 21, 17, .78);
+  box-shadow: var(--elev-1);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.library-opening-badge svg,
+.book-loading-icon svg { animation: book-loading-spin var(--motion-spin) linear infinite; }
+
+.book-loading-feedback {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #efe9df;
+  pointer-events: auto;
+  animation: book-loading-in var(--motion-state) var(--ease-info) both;
+}
+
+:root[data-theme="night"] .book-loading-feedback { background: #100d0a; }
+
+.book-loading-feedback.is-library { background: transparent; }
+.library-sheet:has(> .book-loading-feedback) button:disabled { opacity: 1; }
+
+.book-loading-feedback.is-stage { z-index: 35; }
+
+.book-loading-skeleton::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: rgba(23, 63, 57, .22);
+  content: "";
+}
+
+.book-loading-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: min(360px, calc(100vw - 40px));
+  min-height: 76px;
+  border-radius: var(--radius-l);
+  padding: 13px 18px;
+  color: var(--ink);
+  background: var(--surface-strong);
+  box-shadow: var(--elev-3);
+}
+
+.book-loading-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--shape-circle);
+  color: #fff;
+  background: var(--accent);
+}
+
+.book-loading-card > span:last-child { display: grid; gap: 3px; min-width: 0; }
+.book-loading-card strong { overflow: hidden; font-family: var(--font-display); font-size: var(--text-lead); text-overflow: ellipsis; white-space: nowrap; }
+.book-loading-card small { color: var(--muted); font-size: var(--text-caption); }
+
+@keyframes book-loading-spin { to { transform: rotate(1turn); } }
+@keyframes book-loading-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.library-cover-frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: var(--shape-cover);
+  box-shadow: var(--elev-book);
+  transition: box-shadow var(--motion-state) var(--ease-info);
+}
+
+.library-card-shell:hover .library-cover-frame img,
+.library-card-shell:focus-within .library-cover-frame img { box-shadow: var(--elev-book-hover); }
+:root[data-theme="night"] .library-cover-frame img { box-shadow: var(--elev-book); }
+
+.library-delete-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: max-content;
+  min-height: 40px;
+  margin: 6px auto 0;
+  border: 1px solid transparent;
+  border-radius: var(--shape-circle);
+  padding: 0 12px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--text-caption);
+  font-weight: 700;
+}
+
+.library-delete-button:hover:not(:disabled),
+.library-delete-button:focus-visible {
+  border-color: color-mix(in srgb, var(--status-danger) 42%, transparent);
+  color: var(--status-danger);
+  background: var(--status-danger-soft);
+}
+
+.library-delete-button:disabled { cursor: wait; opacity: .62; }
+
+.library-card-copy { display: grid; gap: var(--space-1); min-width: 0; }
+.library-card-copy small { overflow: hidden; color: var(--accent); font-size: var(--text-caption); font-weight: var(--weight-strong); letter-spacing: var(--track-caps); text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.library-card-copy strong {
+  display: -webkit-box;
+  min-height: 32px;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  line-height: 1.08;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.demo-disclosure {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-caption);
+  letter-spacing: .015em;
+  text-align: center;
+  pointer-events: auto;
+}
+
+/* Three jobs, three treatments.
+ *
+ * One rule used to give ten unrelated selectors the same frosted card, and a
+ * second copy of it lower down gave three more. A default reading screen
+ * therefore showed seven surfaces at identical visual weight, each running a
+ * backdrop readback over a live WebGL canvas. Elevation now says what a thing
+ * IS, and nothing is translucent over the book.
+ */
+
+/* Resting on the paper: chrome that belongs to the page itself. */
+.theme-switch,
+.library-tabs,
+.preview-button,
+.outline-button,
+.page-arrow,
+.agent-action,
+.hover-hint {
+  border: 0;
+  background: var(--surface-strong);
+  box-shadow: var(--elev-1);
+}
+
+/* Lifted off the paper: a surface the reader summoned. */
+.context-menu,
+.element-panel,
+.element-rail {
+  border: 0;
+  background: var(--surface-strong);
+  box-shadow: var(--elev-2);
+}
+
+/* Floating over the book: an aside that takes the reader's attention. */
+.story-outline,
+.reveal-card {
+  border: 0;
+  background: var(--surface-strong);
+  box-shadow: var(--elev-3);
+}
+
+/* The folio is printed matter, not a control. Ink on the page edge. */
+.page-progress {
+  border: 0;
+  color: var(--ink-3);
+  background: none;
+  box-shadow: none;
+}
+
+/* The one primary action on the reading screen. */
+.agent-prompt {
+  border: 0;
+}
+
+.theme-switch {
+  position: relative;
+  display: flex;
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+}
+
+.theme-switch button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 35px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 0 var(--space-3);
+  color: var(--ink-3);
+  background: transparent;
+  cursor: pointer;
+}
+
+.theme-switch button.is-active { color: var(--ink); }
+
+/* The travelling thumb. One marker for the whole group, so the selection reads
+   as movement rather than as a colour that changed while you were not looking:
+   the selected option's box is measured into the marker's inline geometry and
+   the transition covers the real distance between the two options. */
+.switch-thumb,
+.switch-underline {
+  position: absolute;
+  pointer-events: none;
+  transition:
+    left var(--motion-state) var(--ease-object),
+    top var(--motion-state) var(--ease-object),
+    width var(--motion-state) var(--ease-object),
+    height var(--motion-state) var(--ease-object);
+}
+
+.theme-switch .switch-thumb {
+  z-index: 0;
+  border-radius: var(--radius-pill);
+  background: var(--surface-strong);
+  box-shadow: var(--ring-inset-accent);
+}
+
+.theme-switch .switch-label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.preview-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: var(--radius-pill);
+  padding: 0 17px;
+  cursor: pointer;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  --selection-x: 50vw;
+  --selection-y: 40%;
+}
+
+.stage[aria-hidden="true"] { z-index: 50; }
+.stage[aria-hidden="true"] > :not(.book-scene):not(.fallback-book) { visibility: hidden; }
+
+.book-scene {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.book-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.book-scene canvas:active { cursor: grabbing; }
+
+.fallback-book {
+  position: absolute;
+  /* Its own stacking context. The composited layers index themselves by depth
+     up to 100 and the page copy sits at 80, so without this the inside of a
+     flat book outranked the element actions floating over it and the reader
+     read "Ask Codex" through a paragraph. `isolation` states exactly that and
+     nothing else; `z-index` would also reorder it against its auto siblings. */
+  isolation: isolate;
+  inset: 14% 7% 13%;
+  display: grid;
+  place-items: center;
+  border: 18px solid #173f39;
+  border-radius: var(--radius-l);
+  overflow: hidden;
+  background: #f7f0df;
+  box-shadow: var(--elev-3);
+}
+
+.fallback-book img {
+  width: 100%;
+  height: 100%;
+}
+
+.fallback-book.is-composited { display: block; }
+.fallback-book .fallback-composite-base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.fallback-book .fallback-interaction-target {
+  position: absolute;
+  left: var(--spread-x);
+  width: 22%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transform-origin: center;
+}
+.fallback-book .fallback-interaction-target:focus-visible {
+  outline: 3px solid rgba(255, 119, 92, .9);
+  outline-offset: 5px;
+}
+.fallback-book .fallback-interaction-target:hover,
+.fallback-book .fallback-interaction-target[aria-pressed="true"] {
+  filter: drop-shadow(0 0 10px rgba(255, 119, 92, .6));
+}
+.fallback-book .fallback-composite-layer {
+  width: 100%;
+  height: auto;
+  max-height: 54%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 9px rgba(21, 14, 9, .22));
+}
+.fallback-procedural-marker {
+  --marker-color: #f7a84a;
+  width: clamp(30px, 42%, 58px);
+  aspect-ratio: 1;
+  border: 3px solid rgba(255, 255, 255, .92);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, .96) 0 14%, var(--marker-color) 17% 42%, transparent 45%);
+  box-shadow: var(--ring-marker), var(--elev-2);
+}
+.fallback-procedural-marker.is-aqua { --marker-color: #55c9d1; }
+.fallback-procedural-marker.is-jade { --marker-color: #5ab58b; }
+.fallback-procedural-marker.is-rose { --marker-color: #df7890; }
+.fallback-composite-copy {
+  position: absolute;
+  z-index: 80;
+  top: 9%;
+  left: 6%;
+  width: min(31%, 320px);
+  padding: clamp(10px, 1.4vw, 18px);
+  border-radius: var(--radius-m);
+  color: #fff8e8;
+  background: rgba(12, 14, 18, .62);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+  backdrop-filter: blur(5px);
+}
+.fallback-composite-copy p { margin: 0; font-size: var(--text-body); line-height: 1.42; }
+.fallback-composite-copy > p:first-child { margin-bottom: 7px; font-size: var(--text-caption); font-weight: 750; letter-spacing: .11em; text-transform: uppercase; }
+.fallback-composite-copy h2 {
+  margin: 0 0 9px;
+  font-family: var(--font-display);
+  font-size: var(--text-display-s);
+  font-weight: var(--weight-title);
+  line-height: var(--leading-display-s);
+}
+
+.page-arrow {
+  position: absolute;
+  z-index: 12;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--shape-circle);
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: transform var(--motion-feedback) var(--ease-object), opacity var(--motion-feedback) var(--ease-info);
+}
+
+.page-arrow:hover:not(:disabled) { transform: translateY(-50%) scale(1.06); }
+.page-arrow:disabled { opacity: 0.28; cursor: default; }
+.page-arrow-left { left: clamp(14px, 3vw, 48px); }
+.page-arrow-right { right: clamp(14px, 3vw, 48px); }
+
+.selection-ui {
+  position: absolute;
+  z-index: 16;
+  left: var(--selection-x);
+  top: var(--selection-y);
+  width: 0;
+  height: 0;
+}
+
+.selection-ring {
+  position: absolute;
+  width: 162px;
+  height: 132px;
+  border: 2px solid var(--accent);
+  border-radius: var(--shape-selection);
+  transform: translate(-50%, -55%) rotate(-4deg);
+  box-shadow: var(--ring-neutral), var(--elev-2);
+  pointer-events: none;
+}
+
+.selection-ring::before,
+.selection-ring::after {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--accent);
+  border-radius: var(--shape-circle);
+  background: #fffdf8;
+  content: "";
+}
+
+.selection-ring::before { top: -7px; left: -7px; }
+.selection-ring::after { right: -7px; bottom: -7px; }
+
+.context-menu {
+  position: absolute;
+  top: 82px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  border-radius: var(--radius-m);
+  padding: 5px;
+  translate: -50% 0;
+}
+
+.context-menu.clears-right { top: 138px; translate: -100% 0; }
+.context-menu.clears-left { translate: 0; }
+
+.context-menu button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  border: 0;
+  border-radius: var(--radius-s);
+  padding: 0 12px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.context-menu button:hover,
+.context-menu button.is-on {
+  color: var(--ink);
+  background: var(--accent-soft);
+}
+
+.context-menu button:disabled { opacity: 0.4; }
+.element-panel button:disabled,
+.element-panel select:disabled { opacity: 0.42; cursor: not-allowed; }
+.context-menu .icon-button { width: 40px; padding: 0; justify-content: center; }
+
+.element-panel {
+  position: absolute;
+  top: 138px;
+  left: 0;
+  width: 270px;
+  border-radius: var(--radius-l);
+  padding: 14px;
+  translate: -50% 0;
+}
+
+.element-panel.clears-right { top: 194px; translate: -100% 0; }
+.element-panel.clears-left { translate: 0; }
+
+.element-panel > div,
+.element-panel label {
+  display: grid;
+  grid-template-columns: 1fr 34px 54px 34px;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  color: var(--muted);
+  font-size: var(--text-body);
+}
+
+.element-panel button,
+.element-panel select {
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  color: var(--ink);
+  background: var(--surface-strong);
+}
+
+.element-panel button { display: grid; place-items: center; cursor: pointer; }
+.element-panel output { color: var(--ink); text-align: center; }
+.element-panel label { grid-template-columns: 1fr 2fr; }
+.element-panel select { width: 100%; padding: 0 8px; }
+
+.agent-action {
+  position: absolute;
+  z-index: 18;
+  left: 50%;
+  top: 104px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  border-radius: var(--radius-pill);
+  padding: 0 14px;
+  /* `translate`, not `transform`: Toast writes its entrance into the inline
+     transform, and a transform-based centering would simply be replaced by it
+     - the toast then hangs off the right edge of a phone. */
+  translate: -50% 0;
+  color: var(--muted);
+  font-size: var(--text-body);
+}
+
+.agent-action-success { color: var(--ink); }
+.agent-action-error { color: var(--status-danger); }
+.agent-action button {
+  min-height: 28px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  padding: 0 2px 0 10px;
+  color: var(--ink);
+  background: transparent;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+@keyframes action-in {
+  from { opacity: 0; transform: translate(-50%, -7px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.bottom-controls {
+  position: absolute;
+  z-index: 20;
+  left: 50%;
+  bottom: clamp(20px, 3.5vh, 42px);
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 24px;
+  width: max-content;
+  max-width: calc(100% - 44px);
+  transform: translateX(-50%);
+}
+
+.outline-button,
+.agent-prompt,
+.page-progress {
+  min-height: 48px;
+  border-radius: var(--radius-pill);
+}
+
+.bottom-left-actions { display: flex; gap: 8px; }
+
+.outline-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 18px;
+  cursor: pointer;
+}
+
+.agent-prompt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: auto;
+  max-width: 300px;
+  padding: 0 var(--space-4);
+  color: var(--accent-ink);
+  background: var(--accent);
+  box-shadow: var(--elev-accent-rest);
+  cursor: pointer;
+  text-align: center;
+  font-weight: 600;
+  transition: transform var(--motion-feedback) var(--ease-info), box-shadow var(--motion-feedback) var(--ease-info), filter var(--motion-feedback) var(--ease-info);
+}
+
+.agent-prompt:hover { transform: translateY(-1px); box-shadow: var(--elev-accent-hover); filter: saturate(1.04); }
+.agent-prompt:active { transform: translateY(0); box-shadow: var(--elev-accent-press); }
+
+.agent-prompt-label,
+.publish-button > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-prompt-label-compact { display: none; }
+
+.page-progress {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 78px;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.page-progress strong { color: var(--ink); font-weight: 600; }
+
+.story-outline {
+  position: absolute;
+  z-index: 30;
+  top: 90px;
+  bottom: 30px;
+  left: 30px;
+  display: flex;
+  flex-direction: column;
+  width: min(390px, calc(100% - 60px));
+  border-radius: var(--radius-l);
+  padding: 20px;
+}
+
+.outline-head,
+.outline-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.outline-head > div { display: grid; gap: 3px; }
+.outline-head span { font-family: var(--font-display); font-size: var(--text-title); font-weight: 700; }
+.outline-head small,
+.outline-foot { color: var(--muted); font-size: var(--text-caption); }
+
+.outline-head button,
+.outline-foot button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.outline-head button { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--shape-circle); }
+
+.story-outline ol {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+
+.story-outline li button {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--radius-m);
+  padding: 12px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.story-outline li button:hover,
+.story-outline li button.is-current { border-color: var(--line); background: var(--accent-soft); }
+.story-outline li button > span { padding-top: 2px; color: var(--accent); font-size: var(--text-caption); }
+.story-outline li button > div { display: grid; gap: 5px; }
+.story-outline li strong { color: var(--ink); font-family: var(--font-display); font-size: var(--text-body); }
+
+.story-outline li small {
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.outline-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
+.outline-foot > span { display: flex; align-items: center; gap: 7px; }
+.outline-foot i { width: 7px; height: 7px; border-radius: var(--shape-circle); background: #a7a49c; }
+.outline-foot .is-connected i { background: var(--status-success-dot); box-shadow: var(--ring-ok); }
+
+.copy-starter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 0 17px;
+  color: #fff;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.is-spinning { animation: book-loading-spin var(--motion-spin) linear infinite; }
+
+/* Status is a line of type with a dot, not a bordered pill around a line of
+   type with a dot. */
+.workshop-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-self: start;
+  margin: 0;
+  padding: 0;
+  color: var(--ink-3);
+  font-size: var(--text-caption);
+  line-height: 1.35;
+}
+
+.workshop-signal i { flex: 0 0 auto; width: 8px; height: 8px; border-radius: var(--shape-circle); background: #aaa59a; box-shadow: var(--ring-neutral); }
+.workshop-signal.is-connected { color: var(--ink-2); }
+.workshop-signal.is-connected i { background: var(--status-success-dot); box-shadow: var(--ring-ok); }
+
+/* Creation is a full workspace, not a form modal. The live Three.js stage
+   supplies the blank physical book while this layer supplies only controls. */
+.app-shell.is-creation-active .book-library,
+.app-shell.is-creation-active > .topbar,
+.app-shell.is-creation-active > .bottom-controls {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-shell.is-workspace-transitioning { cursor: progress; }
+
+/* Structural navigation crosses an opaque paper surface before React swaps
+   the reader/library scene for the blank-book workspace. This is not a generic
+   route fade: the circle is measured from the control that caused the change,
+   and the reverse reveal returns to that same place. */
+.workspace-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #244d45;
+  background:
+    linear-gradient(rgba(248, 243, 234, .72), rgba(239, 231, 217, .78)),
+    url("/assets/generated/day-background.webp") center / cover;
+  pointer-events: auto;
+  will-change: clip-path, opacity;
+}
+
+.workspace-transition-mark {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 700;
+  letter-spacing: -.035em;
+  opacity: .62;
+}
+
+.workspace-transition[data-phase^="revealing"] .workspace-transition-mark { opacity: 0; }
+
+:root[data-theme="night"] .workspace-transition {
+  color: #f2dfbd;
+  background:
+    linear-gradient(rgba(18, 13, 9, .76), rgba(26, 19, 14, .82)),
+    url("/assets/generated/night-background.webp") center / cover;
+}
+
+.stage.is-creation-workshop {
+  z-index: 50;
+  background: color-mix(in srgb, #f3ede2 74%, transparent);
+}
+
+:root[data-theme="night"] .stage.is-creation-workshop { background: rgba(13, 10, 8, .72); }
+
+.stage.is-creation-workshop .book-scene {
+  position: absolute;
+  inset: 0 404px 0 0;
+  width: auto;
+  pointer-events: none;
+  transform-origin: 38% 54%;
+  animation: workspace-book-in var(--motion-navigation) var(--ease-navigation) both;
+}
+
+@keyframes workspace-book-in {
+  from { transform: scale(.965); }
+  to { transform: scale(1); }
+}
+
+.stage.is-creation-workshop .book-scene canvas { cursor: default; }
+.stage.is-creation-workshop.is-story-pencil-active .book-scene { pointer-events: auto; }
+.stage.is-creation-workshop.is-story-pencil-active .book-scene canvas { cursor: crosshair; }
+
+.creation-workshop {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  color: var(--ink);
+  pointer-events: none;
+}
+
+.story-pencil-controls {
+  position: absolute;
+  z-index: 5;
+  right: 428px;
+  bottom: 26px;
+  left: 28px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px auto auto auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 5px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  box-shadow: var(--elev-2);
+  pointer-events: auto;
+  animation: workshop-in var(--motion-reveal) var(--ease-info) both;
+}
+
+.story-pencil-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+}
+
+.story-pencil-controls button:hover:not(:disabled) { border-color: var(--line); background: var(--surface); }
+.story-pencil-controls button:disabled { opacity: .32; cursor: default; }
+
+.story-pencil-controls .story-pencil-toggle { padding: 0 14px; color: var(--muted); }
+.story-pencil-controls .story-pencil-toggle.is-active { color: #fff; background: #e64a3d; }
+.story-pencil-controls .story-pencil-toggle.is-active:hover { background: #e64a3d; }
+
+.story-pencil-beat { display: grid; gap: 1px; min-width: 0; padding-inline: 6px; }
+.story-pencil-beat small { color: var(--accent); font-size: var(--text-caption); font-weight: var(--weight-strong); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.story-pencil-beat strong { overflow: hidden; font-family: var(--font-display); font-size: var(--text-body); font-weight: var(--weight-text); text-overflow: ellipsis; white-space: nowrap; }
+
+/* Which Site tool Codex is running: top centre, above every panel and the workshop. */
+.agent-activity {
+  position: absolute;
+  z-index: 40;
+  top: 14px;
+  left: 50%;
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--radius-pill);
+  padding: 8px 14px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
+  box-shadow: var(--elev-2);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-strong);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.agent-activity-done { color: var(--status-success); }
+.agent-activity-error { color: var(--status-danger); }
+
+/* The reader's stroke, read back the way Codex will read it. */
+.story-pencil-read {
+  position: absolute;
+  z-index: 5;
+  right: 428px;
+  bottom: 92px;
+  border-radius: var(--radius-pill);
+  padding: 9px 14px;
+  color: #e64a3d;
+  background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
+  box-shadow: var(--elev-2);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-strong);
+  pointer-events: none;
+  animation: story-pencil-read-out 3s linear both;
+}
+
+@keyframes story-pencil-read-out {
+  0%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-pencil-read { animation: none; }
+}
+
+.story-pencil-notice {
+  position: absolute;
+  z-index: 5;
+  left: 28px;
+  bottom: 92px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--radius-pill);
+  padding: 9px 14px;
+  color: var(--status-success);
+  background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
+  box-shadow: var(--elev-2);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-strong);
+  pointer-events: none;
+}
+
+@keyframes workshop-in { from { opacity: 0; } }
+
+.workshop-atmosphere {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(250, 246, 238, .34), rgba(250, 246, 238, 0) 58%, rgba(239, 231, 217, .58));
+}
+
+:root[data-theme="night"] .workshop-atmosphere {
+  background: linear-gradient(90deg, rgba(12, 9, 7, .18), rgba(12, 9, 7, 0) 56%, rgba(12, 9, 7, .7));
+}
+
+.workshop-ui { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.workshop-topbar {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 82px;
+  padding: 18px 28px;
+  pointer-events: none;
+}
+
+.workshop-close {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.workshop-topbar > span {
+  color: var(--muted);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.workshop-close {
+  justify-self: end;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--shape-circle);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--elev-2);
+}
+
+/* One scrolling sheet, so the same layout holds at 390px, in the Codex side
+   browser, and beside the blank book on a wide desktop. */
+.workshop-topbar { grid-template-columns: 1fr auto; }
+
+.workshop-sheet {
+  position: absolute;
+  z-index: 4;
+  top: 90px;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-strong) 93%, transparent);
+  box-shadow: var(--elev-3);
+  pointer-events: auto;
+}
+
+.app-shell:has(.stage.is-story-pencil-active) .workshop-sheet {
+  opacity: 0 !important;
+  visibility: hidden;
+  translate: 12px 0;
+  pointer-events: none;
+}
+
+.workshop-sheet-scroll {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 17px;
+  padding: 20px 18px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.workshop-headline { display: grid; gap: 5px; }
+.workshop-headline p {
+  margin: 0;
+  color: var(--accent);
+  font-size: var(--text-caption);
+  font-weight: 750;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.workshop-headline h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  line-height: 1.03;
+  letter-spacing: -.035em;
+}
+
+.workshop-field { display: grid; gap: var(--space-2); margin: 0; border: 0; padding: 0; min-width: 0; }
+.workshop-field + .workshop-field { margin-top: var(--space-3); }
+
+.workshop-field-label {
+  padding: 0;
+  color: var(--muted);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-strong);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+
+.workshop-segment,
+.workshop-lengths,
+.workshop-chips { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5); }
+
+/* No box. A small closed vocabulary reads as a set of words when they are
+   spaced as one, and the choice shows in ink weight and a rule under the
+   selected word - which is how print marks a selection. Fourteen outlines
+   were doing the grouping that the legend and the spacing already do. */
+.workshop-picker button {
+  position: relative;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--radius-s);
+  padding: 0 var(--space-1);
+  color: var(--ink-4);
+  background: none;
+  cursor: pointer;
+  font-size: var(--text-body);
+  font-weight: var(--weight-text);
+  line-height: 1.2;
+  text-align: left;
+}
+
+/* The selected rule travels to the next word instead of fading out and back
+   in. The marker carries the option's box; the rule is drawn inside it, inset
+   the way it was when it lived in the button. */
+.workshop-picker { position: relative; }
+
+.workshop-picker .switch-underline::after {
+  content: "";
+  position: absolute;
+  left: var(--space-1);
+  right: var(--space-1);
+  bottom: 6px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.workshop-picker button:hover:not(:disabled) { color: var(--ink-2); }
+
+.workshop-picker button.is-active {
+  color: var(--ink);
+  font-weight: var(--weight-strong);
+}
+
+.workshop-lengths button { font-family: var(--font-display); font-size: var(--text-lead); }
+
+/* The Agent's request, set where the reader acts on it rather than left in
+   the conversation pane. */
+.workshop-handoff-request {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-m);
+  padding: var(--space-3) var(--space-4);
+  color: var(--ink-2);
+  background: var(--accent-soft);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+.workshop-handoff-request svg { flex: none; margin-top: 3px; color: var(--accent); }
+
+.workshop-photos { display: grid; gap: 9px; }
+.workshop-photos-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.workshop-photos-head > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  color: var(--muted);
+  font-size: var(--text-caption);
+  font-weight: 750;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.workshop-photos-head small { letter-spacing: 0; font-size: var(--text-caption); }
+
+.workshop-add-photo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 0 14px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  cursor: pointer;
+  font-size: var(--text-caption);
+  font-weight: 700;
+}
+
+.workshop-add-photo:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.workshop-add-photo:disabled { opacity: .5; cursor: default; }
+
+.workshop-photo-empty {
+  display: grid;
+  place-items: center;
+  gap: 7px;
+  min-height: 104px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-radius: var(--radius-m);
+  padding: 14px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 42%, transparent);
+  cursor: pointer;
+  font-size: var(--text-caption);
+  text-align: center;
+}
+
+.workshop-photo-empty:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+
+.workshop-photo-strip {
+  display: flex;
+  gap: 9px;
+  margin: 0;
+  padding: 0 2px 6px;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+}
+
+.workshop-photo { flex: 0 0 138px; display: grid; gap: 6px; scroll-snap-align: start; }
+.workshop-photo figure { position: relative; display: grid; gap: 5px; margin: 0; }
+.workshop-photo img,
+.workshop-photo-missing {
+  display: grid;
+  place-items: center;
+  width: 138px;
+  height: 104px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  object-fit: cover;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+.workshop-photo figcaption { display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 6px; }
+.workshop-photo-index {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--shape-circle);
+  color: #fff;
+  background: var(--accent);
+  font-size: var(--text-caption);
+  font-weight: 750;
+}
+
+.workshop-photo-name {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-caption);
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workshop-photo-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+.workshop-photo-actions button {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  cursor: pointer;
+}
+
+.workshop-photo-actions button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.workshop-photo-actions button:disabled { opacity: .4; cursor: default; }
+.workshop-photo-actions button:last-child:hover { border-color: #c2543f; color: #c2543f; }
+
+.workshop-import-error {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  align-items: start;
+  gap: 4px 8px;
+  margin: 0;
+  color: var(--status-danger);
+  border-radius: var(--radius-s);
+  padding: 9px 11px;
+  background: var(--status-danger-soft);
+  font-size: var(--text-caption);
+  line-height: 1.4;
+}
+
+.workshop-import-error button {
+  grid-column: 2;
+  justify-self: start;
+  min-height: 44px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+  padding: 0 12px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--text-caption);
+  font-weight: 700;
+}
+
+
+.workshop-actionbar {
+  display: grid;
+  gap: 9px;
+  padding: 13px 18px max(15px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+}
+
+.workshop-summary { margin: 0; color: var(--muted); font-size: var(--text-caption); }
+.workshop-starter-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+  column-gap: 0;
+  transition:
+    grid-template-columns var(--motion-state) var(--ease-info),
+    column-gap var(--motion-state) var(--ease-info);
+}
+
+.workshop-starter-actions.is-followup {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 9px;
+}
+
+.workshop-actionbar .copy-starter-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  font-weight: 750;
+  box-shadow: var(--elev-accent-rest);
+}
+
+.workshop-codex-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 48px;
+  overflow: hidden;
+  border: 0 solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 0;
+  opacity: 0;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-feedback) var(--ease-info),
+    color var(--motion-feedback) var(--ease-info),
+    background-color var(--motion-feedback) var(--ease-info);
+}
+
+.is-followup .workshop-codex-status { border-width: 1px; padding: 0 10px; opacity: 1; }
+.workshop-codex-status.is-active { color: var(--status-success); }
+
+
+.copy-fallback {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: var(--text-caption);
+}
+
+.copy-fallback textarea {
+  width: 100%;
+  min-height: 68px;
+  max-height: 96px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 9px 10px;
+  color: var(--ink);
+  background: var(--surface-strong);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.element-agent-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 72;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(31, 25, 19, .28);
+  backdrop-filter: blur(9px) saturate(.86);
+  animation: workshop-in var(--motion-reveal) var(--ease-info) both;
+}
+
+/* One card chrome for every Agent handoff dialog: the element request, the
+   sharing panel, and the destructive confirmation. Each variant below keeps
+   only its own footprint. */
+.agent-card {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--line) 82%, white);
+  border-radius: var(--radius-l);
+  color: var(--ink);
+  background: #fffaf0;
+  box-shadow: var(--elev-3);
+}
+
+:root[data-theme="night"] .agent-card {
+  border-color: rgba(255, 233, 200, .2);
+  background: rgba(38, 29, 23, .96);
+}
+
+.agent-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 58px;
+  padding: 0 16px 0 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.agent-card > header span { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-size: var(--text-caption); font-weight: 760; letter-spacing: .02em; }
+.agent-card > header button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: var(--shape-circle); color: var(--ink); background: transparent; cursor: pointer; }
+.agent-card > header button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.agent-card > header button:disabled { opacity: .45; cursor: wait; }
+.agent-card > footer { display: grid; border-top: 1px solid var(--line); background: #fff3e9; }
+:root[data-theme="night"] .agent-card > footer { background: #33261f; }
+
+.element-agent-card { width: min(440px, calc(100vw - 32px)); }
+.element-agent-body { padding: 26px 26px 20px; }
+.element-agent-body > p { margin: 0 0 7px; color: var(--accent); font-size: var(--text-caption); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.element-agent-body h2 { margin: 0; font-family: var(--font-display); font-size: var(--text-display-m); line-height: .98; font-weight: 650; }
+.element-agent-body > span { display: block; max-width: 34ch; margin-top: 12px; color: var(--muted); font-size: var(--text-body); line-height: 1.5; }
+.element-agent-body dl { display: grid; gap: 0; margin: 24px 0 0; }
+.element-agent-body dl > div { display: grid; grid-template-columns: 72px 1fr; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
+.element-agent-body dt { color: var(--muted); font-size: var(--text-caption); font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.element-agent-body dd { margin: 0; font-size: var(--text-caption); line-height: 1.4; }
+.element-agent-card > footer { gap: 11px; padding: 18px 26px 24px; }
+.element-agent-card > footer p { margin: 0; color: var(--muted); font-size: var(--text-caption); }
+.copy-element-request { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; border: 0; border-radius: var(--radius-pill); padding: 0 18px; color: white; background: var(--accent); box-shadow: var(--elev-accent-rest); cursor: pointer; font-weight: 760; }
+.copy-element-request:hover { transform: translateY(-1px); filter: saturate(1.06); }
+
+.workshop-blank-fallback {
+  right: 404px;
+  border-width: 14px;
+  background:
+    linear-gradient(90deg, transparent 49.4%, rgba(76, 57, 37, .15) 50%, transparent 50.8%),
+    #f8f0dd;
+}
+
+/* Below this width the blank book steps back to atmosphere and the sheet
+   becomes the page. This is the Codex side-browser and tablet case. */
+@media (max-width: 1080px) {
+  .stage.is-creation-workshop .book-scene { inset: 0; opacity: .4; }
+  .workshop-sheet {
+    top: 72px;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    width: auto;
+    max-width: 560px;
+    margin-inline: auto;
+  }
+  .workshop-blank-fallback { inset: 16% 10% 30%; right: auto; }
+  .stage.is-creation-workshop.has-storyboard .book-scene { inset: 0 360px 0 0; opacity: 1; }
+  .app-shell:has(.stage.has-storyboard) .workshop-sheet { right: 12px; left: auto; width: 340px; margin: 0; }
+  .story-pencil-controls { right: 372px; bottom: 16px; left: 16px; }
+  .story-pencil-read { right: 372px; bottom: 80px; }
+}
+
+@media (max-width: 880px) {
+  .workshop-topbar { min-height: 68px; padding: 12px 16px; }
+}
+
+@media (max-width: 560px) {
+  .stage.is-creation-workshop .book-scene { opacity: .3; }
+  .stage.is-creation-workshop.has-storyboard .book-scene { inset: 56px 0 72px; opacity: 1; }
+  .app-shell:has(.stage.has-storyboard) .workshop-sheet {
+    opacity: 0 !important;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .workshop-topbar {
+    min-height: 60px;
+    padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+  }
+  .workshop-sheet {
+    top: 62px;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: max(10px, env(safe-area-inset-left));
+    border-radius: var(--radius-l);
+  }
+  .workshop-sheet-scroll { gap: 14px; padding: 16px 14px 12px; }
+  .workshop-headline h2 { font-size: var(--text-title); }
+  .workshop-actionbar { padding: 11px 14px max(12px, env(safe-area-inset-bottom)); }
+  .workshop-segment { grid-template-columns: 1fr 1fr; }
+  .workshop-segment button:last-child { grid-column: 1 / -1; }
+  .story-pencil-controls {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: max(10px, env(safe-area-inset-left));
+    grid-template-columns: 40px minmax(0, 1fr) 40px 44px auto;
+  }
+  .story-pencil-read { right: max(10px, env(safe-area-inset-right)); bottom: 64px; }
+  .story-pencil-controls button { min-width: 40px; height: 40px; }
+  .story-pencil-controls .story-pencil-toggle { width: 44px; padding: 0; }
+  .story-pencil-toggle span { display: none; }
+}
+
+.is-preview .topbar { grid-template-columns: 1fr 1fr; }
+.is-preview .wordmark { grid-column: 1; justify-self: start; }
+.is-preview .topbar-actions { grid-column: 2; }
+.is-preview:not(.is-shared-reader) .theme-switch { display: none; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 880px) {
+  .topbar { min-height: 72px; padding: 14px 16px; }
+  .wordmark { grid-column: 2; justify-self: center; font-size: var(--text-title); }
+  .library-button { grid-column: 1; }
+  .topbar-actions { grid-column: 3; }
+  /* Icon-only on a phone. Scoped to the label's own word because
+     `.theme-switch .switch-label` outranks a plain `.theme-switch span`, which
+     is how "Day" and "Night" ended up rendered at full width, overlapping each
+     other outside their own 34px buttons. */
+  .theme-switch .switch-label > span,
+  .preview-button span { display: none; }
+  .theme-switch button { padding: 0 9px; }
+  .preview-button { width: 44px; padding: 0; justify-content: center; }
+  .bottom-controls { grid-template-columns: auto auto auto; gap: 10px; width: max-content; max-width: calc(100% - 28px); }
+  .agent-prompt { min-width: 0; max-width: min(300px, 44vw); padding-left: 15px; }
+  .selection-ring { width: 120px; height: 100px; }
+  /* Bounded so the four actions can never be wider than the screen; the rule
+     below then keeps them on it. Wrapping is the last resort and costs one
+     38px row - still cheaper than deleting an action, which is what the old
+     rule did to "Ask Codex". */
+  .context-menu { top: 64px; flex-wrap: wrap; max-width: calc(100vw - 24px); }
+  .context-menu.clears-right { top: 64px; }
+  .element-panel,
+  .element-panel.clears-right,
+  .element-panel.clears-left { top: 112px; }
+  /* Both surfaces are anchored to an element that can sit anywhere across the
+     screen, and the stage clips whatever leaves it. The old rule solved that
+     by deleting "Ask Codex" until the menu was narrow enough to fit - an
+     action with no other entry point anywhere in the reading view. They slide
+     back inside the viewport instead, and only as far as they have to.
+     `translate` rather than `transform`, because the panel's entrance
+     animation writes transform inline and the independent property composes
+     with it instead of being overwritten by it. */
+  .context-menu,
+  .context-menu.clears-right,
+  .context-menu.clears-left,
+  .element-panel,
+  .element-panel.clears-right,
+  .element-panel.clears-left {
+    translate: clamp(
+      calc(10px - var(--selection-x)),
+      -50%,
+      calc(100vw - 10px - var(--selection-x) - 100%)
+    );
+  }
+  .context-menu button { padding-inline: 9px; font-size: var(--text-caption); }
+  .library-sheet { gap: clamp(9px, 1.5vh, 16px); }
+  .library-intro { margin-top: clamp(2px, 1.4vh, 16px); }
+  .library-gallery { --library-track: 172px; gap: clamp(16px, 3vw, 28px); }
+  .library-cover-frame { width: min(100%, 146px); }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    grid-template-columns: 44px minmax(92px, 1fr) auto;
+    min-height: 68px;
+    padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
+  }
+  .wordmark { grid-column: 2; font-size: var(--text-lead); }
+  .topbar-actions { gap: 6px; }
+  .library-button { width: 44px; padding: 0; justify-content: center; }
+  .library-button span { display: none; }
+  .library-sheet {
+    padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  }
+  .library-wordmark { font-size: var(--text-lead); }
+  .theme-switch { display: flex; padding: 3px; }
+  .theme-switch button { width: 34px; min-height: 34px; justify-content: center; padding: 0; }
+  .preview-button { width: 40px; min-height: 40px; }
+  .library-intro { width: 100%; }
+  .library-intro h1 { font-size: var(--text-display-m); }
+  .library-intro > span { max-width: 42ch; margin: 12px auto 0; font-size: var(--text-caption); }
+  .library-actions { justify-content: center; margin-top: 15px; }
+  .library-tabs { width: 100%; }
+  .library-tabs button { flex: 1 1 0; justify-content: center; min-height: 40px; padding: 0 10px; }
+  .library-gallery { --library-track: 148px; gap: 20px 16px; padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+  .element-rail::-webkit-scrollbar { display: none; }
+  .library-cover-frame { width: min(100%, 158px); }
+  .demo-disclosure { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .page-arrow { width: 40px; height: 40px; }
+  /* The outline was hidden here while .story-outline kept an authored 560px
+     layout that nothing could open. The bar is tightened to make room for the
+     button rather than the button removed to make room for the bar. */
+  .outline-button { padding: 0 13px; }
+  .bottom-controls {
+    bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px));
+    grid-template-columns: auto minmax(0, auto) auto;
+    gap: 5px;
+    max-width: calc(100% - 24px);
+  }
+  .bottom-left-actions { min-width: 0; gap: 5px; }
+  .outline-button { padding-inline: 7px; }
+  .publish-button { min-width: 0; gap: 5px; padding-inline: 8px; }
+  .outline-button,
+  .publish-button,
+  .agent-prompt { height: 48px; min-height: 48px; }
+  .agent-prompt { gap: 7px; padding-inline: 10px; font-size: var(--text-body); }
+  .agent-prompt > svg { display: none; }
+  .agent-prompt-label-full { display: none; }
+  .agent-prompt-label-compact { display: block; }
+  .story-outline { top: 76px; left: 14px; bottom: 14px; width: calc(100% - 28px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* `transition: none`, not a 1ms duration. Duration alone leaves
+     `transition-property` at its initial `all`, which switches transitions ON
+     for every element that never asked for one - so a surface positioned by a
+     written custom property slides to each new place instead of being put
+     there. Nothing in the app waits on transitionend, so there is no reason to
+     keep a 1ms window open. */
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition: none !important;
+  }
+  .library-opening-badge svg,
+  .book-loading-icon svg { animation: none !important; }
+  .book-loading-feedback { animation-delay: 0ms !important; }
+}
+
+/* `?reducedMotion=1` is the authoring-route browser-QA override for the same
+   semantic path as the platform preference. Keep this selector paired with the
+   media query so QA can exercise the CSS path when it cannot control the OS. */
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition: none !important;
+}
+:root[data-motion="reduced"] .library-opening-badge svg,
+:root[data-motion="reduced"] .book-loading-icon svg { animation: none !important; }
+:root[data-motion="reduced"] .book-loading-feedback { animation-delay: 0ms !important; }
+
+/* Structured interaction surfaces: element rail, hover affordance, reveal card. */
+
+.element-rail {
+  position: absolute;
+  z-index: 14;
+  left: clamp(14px, 3vw, 48px);
+  bottom: clamp(96px, 14vh, 150px);
+  display: grid;
+  gap: 4px;
+  width: min(248px, 46vw);
+  border-radius: var(--radius-l);
+  padding: 6px;
+}
+
+.element-rail button {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-m);
+  padding: 7px 10px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: transform var(--motion-feedback) var(--ease-object);
+}
+
+.element-rail button:hover,
+.element-rail button.is-hovered { border-color: var(--line); background: var(--accent-soft); transform: translateX(2px); }
+.element-rail button.is-selected { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+.element-rail button > span { display: grid; gap: 2px; min-width: 0; }
+.element-rail strong { color: var(--ink); font-size: var(--text-body); font-weight: 600; }
+
+.element-rail small {
+  overflow: hidden;
+  font-size: var(--text-caption);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hover-hint {
+  position: absolute;
+  z-index: 15;
+  left: 50%;
+  top: 104px;
+  margin: 0;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  padding: 0 15px;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: var(--text-body);
+  animation: action-in var(--motion-state) var(--ease-info) both;
+}
+
+.reveal-card {
+  position: absolute;
+  z-index: 17;
+  top: clamp(96px, 13vh, 150px);
+  width: min(340px, calc(100% - 32px));
+  max-height: min(62vh, 560px);
+  overflow: auto;
+  border-radius: var(--radius-l);
+  padding: 22px 22px 18px;
+  animation: reveal-in var(--motion-reveal) var(--ease-object) both;
+}
+
+/* The card opens on the page opposite the element so the object stays visible. */
+.reveal-card.is-right { right: clamp(14px, 3vw, 48px); }
+.reveal-card.is-left { left: clamp(14px, 3vw, 48px); }
+.reveal-card.is-left { animation-name: reveal-in-left; }
+
+@keyframes reveal-in-left {
+  from { opacity: 0; transform: translate(-12px, 8px) scale(0.985); }
+  to { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+
+@keyframes reveal-in {
+  from { opacity: 0; transform: translate(12px, 8px) scale(0.985); }
+  to { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+
+.reveal-card header p {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: var(--text-caption);
+  font-weight: 650;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.reveal-card h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.reveal-summary {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+.reveal-card dl {
+  display: grid;
+  gap: 0;
+  margin: 16px 0 0;
+}
+
+.reveal-card dl > div {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+
+.reveal-card dt { color: var(--muted); font-size: var(--text-caption); letter-spacing: 0.02em; }
+.reveal-card dd { margin: 0; color: var(--ink); font-size: var(--text-body); line-height: 1.4; }
+
+.reveal-source {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--text-caption);
+  letter-spacing: 0.02em;
+}
+
+.reveal-close {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--shape-circle);
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.reveal-close:hover { background: var(--accent-soft); color: var(--ink); }
+.reveal-caption dl { display: none; }
+
+.fallback-plate {
+  width: 100%;
+  height: 100%;
+  padding: clamp(24px, 5vw, 64px);
+  overflow: auto;
+  color: #191b18;
+  background: linear-gradient(160deg, #fbf5e7, #f0e6d1);
+}
+
+.fallback-kicker {
+  margin: 0 0 14px;
+  color: #8a6f4d;
+  font-size: var(--text-caption);
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.fallback-plate h2 {
+  margin: 0;
+  max-width: 16ch;
+  font-family: var(--font-display);
+  font-size: var(--text-display-m);
+  line-height: 1.1;
+}
+
+.fallback-plate > p:not(.fallback-kicker) { max-width: 52ch; color: #5c574d; font-size: var(--text-body); line-height: 1.55; }
+.fallback-plate dl { display: grid; max-width: 46ch; margin: 22px 0 0; }
+
+.fallback-plate dl > div {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 14px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(25, 27, 24, 0.12);
+}
+
+.fallback-plate dt { color: #6d675b; font-size: var(--text-body); }
+.fallback-plate dd { margin: 0; font-size: var(--text-body); }
+
+@media (min-width: 900px) {
+  .fallback-plate {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 clamp(32px, 5vw, 72px);
+    align-content: center;
+  }
+
+  .fallback-kicker { grid-column: 1; grid-row: 1; }
+  .fallback-plate h2 { grid-column: 1; grid-row: 2; }
+  .fallback-plate > p:not(.fallback-kicker) { grid-column: 1; grid-row: 3; }
+  .fallback-plate dl { grid-column: 2; grid-row: 1 / 4; align-self: start; margin: 4px 0 0; }
+}
+
+.is-preview .element-rail,
+.is-preview .hover-hint { display: none; }
+
+@media (max-width: 880px) {
+  .element-rail { bottom: clamp(88px, 12vh, 120px); width: min(210px, 52vw); }
+  .element-rail small { display: none; }
+  .reveal-card { top: auto; bottom: clamp(88px, 12vh, 124px); max-height: 46vh; padding: 18px; }
+  .reveal-card.is-right { right: clamp(12px, 3vw, 28px); }
+  .reveal-card.is-left { left: clamp(12px, 3vw, 28px); }
+}
+
+@media (max-width: 560px) {
+  .element-rail {
+    left: 14px;
+    right: 14px;
+    bottom: 84px;
+    display: flex;
+    width: auto;
+    overflow-x: auto;
+  }
+
+  .element-rail button { flex: 0 0 auto; }
+  .reveal-card,
+  .reveal-card.is-left,
+  .reveal-card.is-right {
+    left: 14px;
+    right: 14px;
+    bottom: 164px;
+    width: auto;
+    max-height: min(31vh, 260px);
+    border-radius: var(--radius-l);
+  }
+  .reveal-card h2 { padding-right: 28px; font-size: var(--text-lead); }
+  .reveal-summary { font-size: var(--text-body); }
+  .reveal-card dl > div { grid-template-columns: 96px 1fr; padding: 7px 0; }
+  .hover-hint { display: none; }
+}
+
+/* Short mobile viewports need a horizontal composition rather than the
+   desktop's vertically stacked editorial layout.
+   Bounded by width as well as height: without it a 1280x500 desktop window -
+   a normal thing to drag a browser into - matched "short and landscape" and
+   was handed the phone score, hiding the intro copy on a screen with room
+   for it. Phone landscape tops out well inside 940px. */
+@media (max-height: 520px) and (orientation: landscape) and (max-width: 940px) {
+  .topbar { min-height: 58px; padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)); }
+  .wordmark { font-size: var(--text-lead); }
+  .library-sheet { padding: 10px max(14px, env(safe-area-inset-right)) 8px max(14px, env(safe-area-inset-left)); }
+  .library-wordmark { font-size: var(--text-lead); }
+  .library-sheet { gap: 7px; }
+  .library-intro { width: min(640px, 100%); margin-top: 0; }
+  .library-intro > p,
+  .library-intro > span { display: none; }
+  .library-intro h1 { font-size: var(--text-title); line-height: .92; }
+  .library-actions { margin-top: 8px; }
+  .create-codex-button,
+  .guide-book-button { min-height: 36px; padding-inline: 14px; font-size: var(--text-body); }
+  .library-tabs { padding: 3px; }
+  .library-tabs button { min-height: 30px; padding: 0 12px; font-size: var(--text-caption); }
+  .library-gallery {
+    --library-track: 106px;
+    gap: 16px 14px;
+    padding: 16px 6px 12px;
+  }
+  .library-card { gap: 6px; }
+  .library-cover-frame { width: min(100%, 98px); }
+  .library-card-copy small { font-size: var(--text-caption); }
+  .library-card-copy strong { min-height: 22px; font-size: var(--text-caption); }
+  .demo-disclosure { font-size: var(--text-caption); }
+
+  .bottom-controls {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    gap: 8px;
+  }
+  /* Once a phone is sideways, keep the reading surface honest: creation and
+     publishing remain available from the library, not as a permanent layer
+     over a 390px-tall book. */
+  .bottom-controls .agent-prompt,
+  .bottom-left-actions .publish-button { display: none; }
+  .outline-button,
+  .bottom-controls .page-progress { min-height: 44px; }
+  .element-rail {
+    right: auto;
+    bottom: 58px;
+    left: 50%;
+    display: flex;
+    width: auto;
+    max-width: 60vw;
+    overflow-x: auto;
+    padding: 4px;
+    transform: translateX(-50%);
+    scrollbar-width: none;
+  }
+  .element-rail button { flex: 0 0 auto; min-height: 40px; padding-block: 4px; }
+  .reveal-card,
+  .reveal-card.is-left,
+  .reveal-card.is-right { top: 66px; bottom: 66px; max-height: none; }
+
+  .stage.is-creation-workshop .book-scene { inset: 40px 320px 0 0; opacity: .5; }
+  .workshop-topbar { min-height: 58px; padding: 8px 14px; }
+  .workshop-sheet {
+    top: 58px;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: auto;
+    width: 300px;
+    max-width: none;
+    border-radius: var(--radius-l);
+  }
+  .workshop-sheet-scroll { gap: 12px; padding: 14px 14px 10px; }
+  .workshop-headline h2 { font-size: var(--text-lead); }
+  .workshop-blank-fallback { inset: 20% 38% 18% 4%; right: auto; }
+}
+
+@media (max-width: 560px) and (max-height: 720px) and (orientation: portrait) {
+  .workshop-sheet-scroll { gap: 12px; }
+  .workshop-headline h2 { font-size: var(--text-title); }
+  .workshop-photo { flex-basis: 124px; }
+  .workshop-photo img,
+  .workshop-photo-missing { width: 124px; height: 94px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Publication surface, staged loading marks, and the authored mobile reading
+   composition. These extend the existing paper/lamp language rather than
+   introducing a second visual system.
+   --------------------------------------------------------------------------- */
+
+.book-loading-steps {
+  display: flex;
+  gap: 5px;
+  margin: 7px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.book-loading-steps li {
+  width: 22px;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+  transition: background-color var(--motion-state) var(--ease-info);
+}
+
+.book-loading-steps li.is-done { background: color-mix(in srgb, var(--accent) 52%, transparent); }
+.book-loading-steps li.is-active { background: var(--accent); }
+
+.publish-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 48px;
+  border-radius: var(--radius-pill);
+  padding: 0 17px;
+  color: var(--ink);
+  background: var(--surface-strong);
+  box-shadow: var(--elev-2);
+  cursor: pointer;
+  font-weight: 620;
+}
+
+.publish-button:hover { border-color: var(--accent); color: var(--accent); }
+.publish-button.is-live { border-color: var(--status-success-dot); color: var(--status-success); }
+.publish-button.is-danger { color: var(--status-danger); }
+.publish-button.is-danger:hover { border-color: color-mix(in srgb, var(--status-danger) 42%, transparent); color: var(--status-danger); background: var(--status-danger-soft); }
+
+.publication-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 74;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(31, 25, 19, .32);
+  -webkit-backdrop-filter: blur(9px) saturate(.86);
+  backdrop-filter: blur(9px) saturate(.86);
+  animation: workshop-in var(--motion-reveal) var(--ease-info) both;
+}
+
+.publication-card {
+  position: fixed;
+  inset: 0;
+  width: min(420px, calc(100vw - 32px));
+  height: max-content;
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.publication-body { padding: 22px 24px 18px; overflow-y: auto; }
+
+.publication-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 9px;
+  color: var(--muted);
+  font-size: var(--text-caption);
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.publication-status i { width: 8px; height: 8px; border-radius: var(--shape-circle); background: #a7a49c; }
+.publication-status.is-published i { background: var(--status-success-dot); box-shadow: var(--ring-ok); }
+.publication-status.is-publishing i { background: var(--accent); box-shadow: var(--ring-accent); }
+.publication-status.is-revoked i { background: var(--status-danger); }
+
+.publication-body h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 650;
+  line-height: 1.02;
+}
+
+.publication-lede { display: block; max-width: 44ch; margin-top: 10px; color: var(--muted); font-size: var(--text-body); line-height: 1.5; }
+
+.publication-link {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 14px 15px 13px;
+  background: var(--accent-soft);
+}
+
+.publication-link-label { margin: 0 0 6px; color: var(--accent); font-size: var(--text-caption); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+
+.publication-link-url {
+  margin: 0;
+  overflow-wrap: anywhere;
+  -webkit-user-select: text;
+  user-select: text;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-body);
+  line-height: 1.45;
+}
+
+.publication-link-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+/* Recoverable clipboard failure sits beside the URL it refers to, so the link
+   stays on screen and selectable while the panel explains the manual path. */
+.publication-copy-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 10px 0 0;
+  color: var(--status-danger);
+  font-size: var(--text-caption);
+  line-height: 1.45;
+}
+
+.publication-copy-error svg { flex: none; margin-top: 1px; }
+
+.publication-primary,
+.publication-secondary,
+.publication-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: var(--radius-pill);
+  padding: 0 17px;
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.publication-primary { border: 0; color: #fff; background: var(--accent); box-shadow: var(--elev-accent-rest); }
+.publication-primary:hover:not(:disabled) { transform: translateY(-1px); filter: saturate(1.06); }
+.publication-secondary { border: 1px solid var(--line); color: var(--ink); background: transparent; }
+.publication-secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.publication-secondary.is-caution:hover:not(:disabled) { border-color: #b8863a; color: #96651f; }
+.publication-danger { border: 1px solid color-mix(in srgb, var(--status-danger) 42%, transparent); color: var(--status-danger); background: transparent; }
+.publication-danger:hover:not(:disabled) { color: #fff; background: var(--status-danger); }
+
+.publication-primary:disabled,
+.publication-secondary:disabled,
+.publication-danger:disabled { opacity: .5; cursor: wait; transform: none; }
+
+.publication-notice {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: start;
+  gap: 9px;
+  margin: 16px 0 0;
+  border-radius: var(--radius-m);
+  padding: 11px 13px;
+  font-size: var(--text-caption);
+  line-height: 1.45;
+}
+
+.publication-notice.is-stale { color: var(--status-warning); background: var(--status-warning-soft); }
+.publication-notice.is-error { color: var(--status-danger); background: var(--status-danger-soft); }
+
+.publication-progress { margin-top: 16px; }
+.publication-progress p { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--ink); font-size: var(--text-body); font-weight: 620; }
+.publication-progress small { display: block; margin-top: 6px; color: var(--muted); font-size: var(--text-caption); }
+
+.publication-progress-track {
+  height: 4px;
+  margin-top: 9px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--line);
+}
+
+.publication-progress-track i { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--accent); transition: width var(--motion-state) var(--ease-info); }
+
+.publication-actions { gap: 9px; padding: 16px 24px 20px; }
+
+.destructive-action-card {
+  position: fixed;
+  inset: 0;
+  width: min(420px, calc(100vw - 32px));
+  height: max-content;
+  margin: auto;
+}
+
+.destructive-action-card::backdrop {
+  background: rgba(31, 25, 19, .32);
+  -webkit-backdrop-filter: blur(9px) saturate(.86);
+  backdrop-filter: blur(9px) saturate(.86);
+}
+
+.destructive-action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+@media (max-width: 560px) {
+  .publication-overlay { padding: 16px; }
+  .publication-body { padding: 18px 20px 14px; }
+  .publication-actions { padding: 14px 20px 18px; }
+  .publish-button.is-danger { width: 48px; padding-inline: 0; }
+  .publish-button.is-danger > span { display: none; }
+}
+
+/* Hidden on desktop: the surface below belongs to the mobile portrait score. */
+.reader-sheet { display: none; }
+
+/* Mobile portrait keeps one physical page dominant above a compact story teaser. */
+@media (max-width: 560px) and (orientation: portrait) {
+  .stage {
+    --reader-band-top: 62px;
+    --reader-band-height: calc(100dvh - var(--reader-band-top) - 230px - env(safe-area-inset-bottom));
+    --reader-band-bottom: calc(var(--reader-band-top) + var(--reader-band-height));
+  }
+
+  .stage > .book-scene {
+    --reader-single-page: 1;
+    position: absolute;
+    inset: var(--reader-band-top) 0 auto;
+    height: var(--reader-band-height);
+  }
+
+  .stage > .fallback-book,
+  .book-loading-feedback.is-stage .book-loading-skeleton {
+    inset: auto auto auto 50%;
+    top: calc(var(--reader-band-top) + var(--reader-band-height) / 2);
+    width: auto;
+    height: min(var(--reader-band-height), 98.64vw, 395px);
+    aspect-ratio: 4.2 / 5.18;
+    margin: 0;
+    border-width: 9px;
+    border-radius: var(--radius-m);
+    transform: translate(-50%, -50%);
+  }
+
+  .book-loading-feedback.is-stage .book-loading-skeleton::after { display: none; }
+
+  .book-loading-feedback.is-stage .book-loading-card {
+    position: absolute;
+    top: calc(var(--reader-band-bottom) + 20px);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Match the WebGL single-page binding: show exactly one authored half-spread,
+     and swap the selected left page into the same shell when needed. */
+  .fallback-composite-copy { display: none; }
+  .fallback-book.is-composited .fallback-composite-base {
+    right: auto;
+    width: 200%;
+    max-width: none;
+  }
+  .fallback-book.is-composited[data-page="right"] .fallback-composite-base { transform: translateX(-50%); }
+  .fallback-book.is-composited .fallback-interaction-target {
+    left: var(--page-x);
+    width: 44%;
+  }
+  .fallback-book.is-composited[data-page="left"] .fallback-interaction-target[data-page="right"],
+  .fallback-book.is-composited[data-page="right"] .fallback-interaction-target[data-page="left"] { display: none; }
+
+  .page-arrow { display: none; }
+  .bottom-controls .page-progress { display: none; }
+  .bottom-controls { grid-template-columns: minmax(0, 1fr) auto; }
+
+  .element-rail {
+    top: calc(var(--reader-band-bottom) - 48px);
+    bottom: auto;
+    padding: 4px;
+  }
+
+  .element-rail button { min-height: 40px; }
+
+  .reader-sheet {
+    position: absolute;
+    z-index: 13;
+    top: calc(var(--reader-band-bottom) + 10px);
+    right: 12px;
+    bottom: calc(66px + env(safe-area-inset-bottom));
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: var(--surface-strong);
+    box-shadow: var(--elev-1);
+  }
+
+  .stage:not(:has(.element-rail)) .reader-sheet { top: calc(var(--reader-band-bottom) + 12px); }
+
+  .app-shell.is-preview .reader-sheet {
+    top: calc(var(--reader-band-bottom) + 12px);
+    bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .reader-sheet-copy {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 10px 16px 6px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .reader-sheet-kicker { margin: 0 0 3px; color: var(--accent); font-size: var(--text-caption); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+
+  .reader-sheet-copy h2 {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--font-display);
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: var(--text-lead);
+    font-weight: 650;
+    letter-spacing: -.01em;
+    line-height: 1.08;
+  }
+
+  .reader-sheet-copy p { margin: 8px 0 0; color: var(--muted); font-size: var(--text-body); line-height: 1.45; }
+  .app-shell:not(.is-preview) .reader-sheet-copy > p:not(.reader-sheet-kicker) { display: none; }
+
+  .reader-sheet-controls {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px 6px;
+    border-top: 1px solid var(--line);
+  }
+
+  .reader-sheet-controls button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: var(--shape-circle);
+    color: var(--ink);
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  .reader-sheet-controls button:active:not(:disabled) { border-color: var(--accent); }
+  .reader-sheet-controls button:disabled { opacity: .3; }
+  .reader-sheet-progress { color: var(--muted); font-size: var(--text-body); text-align: center; }
+  .reader-sheet-progress strong { color: var(--ink); font-size: var(--text-lead); font-weight: 650; }
+
+  .bottom-controls { bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px)); }
+  .outline-button,
+  .publish-button,
+  .agent-prompt { height: 44px; min-height: 44px; }
+
+  .reveal-card,
+  .reveal-card.is-left,
+  .reveal-card.is-right { bottom: calc(88px + env(safe-area-inset-bottom)); max-height: min(38dvh, 300px); }
+
+  /* First-fold density: the headline yields room, and the covers become real
+     browsable objects instead of a thin strip floating in dead space. */
+  .library-intro > p { font-size: var(--text-caption); }
+  .library-intro h1 { font-size: var(--text-display-s); }
+  .library-intro > span { max-width: 40ch; margin: 9px auto 0; font-size: var(--text-caption); line-height: 1.42; }
+
+  .library-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .create-codex-button,
+  .guide-book-button { justify-content: center; min-height: 44px; }
+
+  .library-gallery { --library-track: 156px; gap: 22px 14px; }
+  .library-cover-frame { width: 100%; }
+  .library-card-copy strong { font-size: var(--text-body); }
+
+}
+
+
+/* The shared reader's read-only badge is a span, not the icon button the editor
+   collapses at narrow widths, so it must keep room for its label. */
+@media (max-width: 880px) {
+  span.preview-button {
+    width: auto;
+    min-height: 40px;
+    padding: 0 13px;
+    font-size: var(--text-caption);
+    white-space: nowrap;
+  }
+}
+
+/* Presence: a surface that animates in AND out, without an animation runtime.
+   A removed element cannot animate, so `Panel`/`Toast` keep it mounted and
+   write `data-open`; `allow-discrete` holds it painted for the length of its
+   exit and `@starting-style` supplies the values the entrance comes from. The
+   reduced-motion rules above turn every transition off, so both the platform
+   preference and `?reducedMotion=1` make this an instant state change. */
+.presence {
+  transition:
+    opacity var(--motion-state) var(--ease-info),
+    transform var(--motion-state) var(--ease-object),
+    translate var(--motion-state) var(--ease-object),
+    display var(--motion-state) allow-discrete;
+}
+
+.presence[data-open="false"] {
+  display: none;
+  opacity: 0;
+}
+
+/* `transform` rather than `translate`, because the surfaces themselves are
+   placed with `translate` and must keep it. */
+.presence-scale[data-open="false"] { transform: scale(.96); }
+.presence-left[data-open="false"] { transform: translateX(-12px); }
+.presence-toast[data-open="false"] { transform: translateY(-8px) scale(.97); }
+
+@starting-style {
+  .presence[data-open="true"] { opacity: 0; }
+  .presence-scale[data-open="true"] { transform: scale(.96); }
+  .presence-left[data-open="true"] { transform: translateX(-12px); }
+  .presence-toast[data-open="true"] { transform: translateY(-8px) scale(.97); }
+}

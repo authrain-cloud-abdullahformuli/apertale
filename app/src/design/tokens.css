@@ -1,0 +1,114 @@
+:root {
+  /* — color ————————————————————————————————— */
+  --ink: rgb(25 27 24);
+  --ink-2: rgb(25 27 24 / .72);
+  --ink-3: rgb(25 27 24 / .55);
+  --ink-4: rgb(25 27 24 / .38);
+  --muted: #676762;
+  --surface: rgba(255, 253, 248, 0.9);
+  --surface-strong: #fffdf8;
+  --line: rgba(25, 27, 24, 0.11);
+  --accent: #ff654f;
+  --accent-soft: rgba(255, 101, 79, 0.14);
+  --accent-ink: #fffdf8;
+  --status-danger: #b54638;
+  --status-danger-soft: rgba(181, 70, 56, 0.1);
+  --status-success: #2f7f57;
+  --status-success-dot: #47a879;
+  --status-warning: #8a5a15;
+  --status-warning-soft: rgba(214, 158, 61, 0.16);
+
+  /* — type ——————————————————————————————————— */
+  --font-ui: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+  --font-display: "Iowan Old Style", Baskerville, Georgia, serif;
+  --weight-text: 400;
+  --weight-strong: 600;
+  --weight-title: 700;
+  --track-caps: .12em;
+  --track-tight: -.02em;
+  --text-caption: 12px;
+  --leading-caption: 1.4;
+  --text-body: 16px;
+  --text-lead: 21px;
+  --text-title: 28px;
+  --text-display-s: clamp(28px, 3.4vw, 38px);
+  --leading-display-s: 1.15;
+  --text-display-m: clamp(28px, 4.2vw, 50px);
+  --text-display-l: clamp(38px, 4.6vw, 66px);
+
+  /* — radius —————————————————————————————————— */
+  --radius-s: 8px;
+  --radius-m: 16px;
+  --radius-l: 24px;
+  --radius-pill: 999px;
+  --shape-circle: 50%;
+  --shape-cover: 4px 8px 8px 4px;
+  --shape-selection: 45% 52% 44% 48%;
+
+  /* — space ——————————————————————————————————— */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* — elevation ——————————————————————————————— */
+  --elev-1: 0 1px 2px rgb(74 55 39 / .10), 0 2px 6px rgb(74 55 39 / .08);
+  --elev-2: 0 2px 4px rgb(74 55 39 / .12), 0 10px 24px rgb(74 55 39 / .14);
+  --elev-3: 0 4px 8px rgb(74 55 39 / .14), 0 28px 64px rgb(74 55 39 / .22);
+  --ring-neutral: 0 0 0 3px rgb(25 27 24 / .12);
+  --ring-accent: 0 0 0 3px var(--accent-soft);
+  --ring-ok: 0 0 0 3px rgb(71 168 121 / .16);
+  --ring-marker: 0 0 0 4px color-mix(in srgb, var(--marker-color) 35%, transparent);
+  --ring-inset-accent: inset 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent);
+  --elev-book: 0 8px 18px rgb(42 28 17 / .14), 0 24px 42px rgb(42 28 17 / .20);
+  --elev-book-hover: 0 12px 24px rgb(42 28 17 / .16), 0 34px 54px rgb(42 28 17 / .24);
+  --elev-accent-rest: 0 9px 22px color-mix(in srgb, var(--accent) 24%, transparent);
+  --elev-accent-hover: 0 13px 30px color-mix(in srgb, var(--accent) 30%, transparent);
+  --elev-accent-press: 0 5px 12px color-mix(in srgb, var(--accent) 22%, transparent);
+
+  /* — motion —————————————————————————————————— */
+  --motion-press: 60ms;
+  --motion-feedback: 120ms;
+  --motion-state: 220ms;
+  --motion-theme: 240ms;
+  --motion-reveal: 320ms;
+  --motion-book: 1100ms;
+  --motion-navigation: 760ms;
+  --motion-spin: 900ms;
+  --ease-object: cubic-bezier(.22, 1, .36, 1);
+  --ease-info: cubic-bezier(.2, .8, .2, 1);
+  --ease-navigation: cubic-bezier(.22, .72, .16, 1);
+}
+
+:root[data-theme="night"] {
+  --ink: rgb(247 240 227);
+  --ink-2: rgb(247 240 227 / .74);
+  --ink-3: rgb(247 240 227 / .56);
+  --ink-4: rgb(247 240 227 / .40);
+  --muted: #cfc4b1;
+  --surface: rgba(30, 25, 20, 0.88);
+  --surface-strong: #2a2119;
+  --line: rgba(255, 245, 224, 0.13);
+  --accent: #f1bd6a;
+  --accent-soft: rgba(241, 189, 106, 0.16);
+  --accent-ink: #241a11;
+  --status-danger: #f0968a;
+  --status-danger-soft: rgba(240, 141, 126, 0.14);
+  --status-success: #86d3ac;
+  --status-warning: #f2c987;
+  --status-warning-soft: rgba(242, 201, 135, 0.16);
+  --elev-1: 0 1px 2px rgb(0 0 0 / .34), 0 2px 6px rgb(0 0 0 / .28), inset 0 1px 0 rgb(255 183 87 / .05);
+  --elev-2: 0 2px 4px rgb(0 0 0 / .40), 0 10px 24px rgb(0 0 0 / .36), 0 0 28px rgb(255 183 87 / .05);
+  --elev-3: 0 4px 8px rgb(0 0 0 / .46), 0 28px 64px rgb(0 0 0 / .52), 0 0 70px rgb(255 183 87 / .09);
+  --ring-neutral: 0 0 0 3px rgb(247 240 227 / .14);
+  --ring-accent: 0 0 0 3px var(--accent-soft);
+  --ring-ok: 0 0 0 3px rgb(107 168 143 / .18);
+  --ring-marker: 0 0 0 4px color-mix(in srgb, var(--marker-color) 42%, transparent);
+  --ring-inset-accent: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+  --elev-book: 0 10px 22px rgb(0 0 0 / .34), 0 28px 50px rgb(0 0 0 / .48);
+  --elev-book-hover: 0 14px 28px rgb(0 0 0 / .38), 0 38px 62px rgb(0 0 0 / .54);
+}

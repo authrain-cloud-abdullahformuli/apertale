@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use Apertale, please cite it using these metadata."
+title: "Apertale: WebMCP-Native Interactive Living Book Canvas"
+type: software
+authors:
+  - family-names: "Formuli"
+    given-names: "Abdullah"
+    email: "authrainmedia@gmail.com"
+    website: "https://github.com/authrain-cloud-abdullahformuli"
+url: "https://github.com/authrain-cloud-abdullahformuli/apertale"
+repository-code: "https://github.com/authrain-cloud-abdullahformuli/apertale"
+license: MIT
+keywords:
+  - threejs
+  - webgl
+  - webmcp
+  - interactive-book
+  - creative-technology
+  - 3d-canvas
+  - react

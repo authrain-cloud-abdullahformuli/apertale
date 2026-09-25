@@ -1,0 +1,50 @@
+  "name": "apertale",
+  "version": "1.1.0",
+  "description": "WebMCP-native interactive living 3D book canvas built with React, Three.js, and WebGL.",
+  "author": "Abdullah Formuli <authrainmedia@gmail.com> (https://github.com/authrain-cloud-abdullahformuli)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/authrain-cloud-abdullahformuli/apertale.git"
+  },
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22.18.0 || >=24.2.0"
+  },
+  "scripts": {
+    "dev": "node scripts/sync-site-manifest.mjs && vite",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "catalog:assets": "node scripts/sync-bundled-asset-catalog.mjs --write",
+    "grammar:sync": "node scripts/sync-book-element-grammar.mjs --write",
+    "build": "node scripts/sync-site-manifest.mjs && node scripts/sync-bundled-asset-catalog.mjs && node scripts/sync-book-element-grammar.mjs && vite build && node scripts/prepare-sites-build.mjs && node scripts/sync-sites-migrations.mjs",
+    "preview": "vite preview",
+    "test:sites": "npm run build && npm run test:sites:built",
+    "test:sites:built": "node --test tests/*.test.mjs",
+    "optimize:assets": "node scripts/optimize-runtime-images.mjs --write",
+    "audit:cutouts": "node scripts/audit-cutout-alpha.mjs",
+    "verify:release": "npm run typecheck && npm test && npm run test:sites",
+    "verify:assets": "npm run audit:cutouts",
+    "verify:deployment": "node scripts/verify-deployment.mjs"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "2.1.10",
+    "@vitejs/plugin-react": "5.0.4",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "three": "0.185.1",
+    "vite": "6.4.3"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@types/three": "0.185.0",
+    "jsdom": "^30.0.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11",
+    "webmcp-types": "0.1.7"
+  }
+}

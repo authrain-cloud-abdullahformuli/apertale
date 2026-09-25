@@ -1,0 +1,28 @@
+{
+  "name": "apertale",
+  "version": "1.1.0",
+  "description": "WebMCP-native interactive living 3D book canvas built with React, Three.js, and WebGL.",
+  "author": "Abdullah Formuli <authrainmedia@gmail.com> (https://github.com/authrain-cloud-abdullahformuli)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/authrain-cloud-abdullahformuli/apertale.git"
+  },
+  "homepage": "https://github.com/authrain-cloud-abdullahformuli/apertale",
+  "scripts": {
+    "dev": "npm --prefix app run dev",
+    "build": "npm --prefix app run build",
+    "preview": "npm --prefix app run preview",
+    "test": "npm --prefix app run test"
+  },
+  "keywords": [
+    "threejs",
+    "webgl",
+    "webmcp",
+    "interactive-book",
+    "3d-canvas",
+    "react",
+    "vite",
+    "creative-dev"
+  ]
+}

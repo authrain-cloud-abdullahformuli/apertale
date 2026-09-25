@@ -1,0 +1,118 @@
+# Domain Context
+
+## Page-turn session
+
+A page-turn session is the runtime lifecycle of one physical leaf turn, from
+arrow or drag intent through animation to one settled spread commit. It owns
+direction, progress, navigation locking, reduced-motion resolution, stale-frame
+suppression, and disposal (`app/src/pageTurnSession.ts`). The page shapes that
+turn animates — resting depth, vertex deformation, case and spine poses, and
+which spread is painted on the moving leaf — are separate pure geometry
+(`app/src/pageDeformation.ts`).
+
+## Reader shell
+
+The reader shell is the page-turn half of a reader surface: it owns the
+Page-turn session, renderer readiness per turn direction, scene failure, the
+WebGL/fallback choice, and the rule that a spread commit re-arms the wait state
+and drops readiness before the index moves (`app/src/readerShell.ts`). The
+editor and the shared reader differ only in where the spread index lives — the
+book engine or local state — and express that difference as the shell's
+`commit` adapter.
+
+## Book element grammar
+
+The Book element grammar is the single source of truth for every field bound and
+closed vocabulary a book element may carry: transform ranges, depth, label
+length, frame-sequence count, motion presets and duration, reveal shape, hover
+and focus responses, element kinds, pages, provenance, the spread and
+element-per-spread counts, and the element-id, share-token, book-id,
+procedural-marker, and image-type patterns. The WebMCP tool catalog derives its
+parsers and JSON Schema from it, the command engine validates against it, and
+`worker/bookElementGrammar.json` is generated from it so the publish boundary
+keeps its own validators while sharing one set of constants.
+
+## WebMCP tool catalog
+
+The WebMCP tool catalog is the authoritative ordered set of Agent-discoverable
+Site Tools shipped by Apertale. Runtime registration, the authoring guide, the
+public manifest, and deployment verification consume this same catalog.
+
+The anonymous share reader registers its own single read-only tool
+(`app/src/sharedBookTools.ts`); it is not part of this catalog or the manifest,
+and it imports nothing from the authoring tool module.
+
+## Asset registry
+
+The Asset registry admits supported browser-local images, optimizes and stores
+them, assigns stable asset IDs, exposes metadata and Blob resolution, and owns
+the browser-side distinction between persisted and non-local asset references.
+
+## Creation workshop session
+
+A Creation workshop session holds the authoring mode, spread count, visual
+direction, and ordered source-image membership for one creation brief. It owns
+session restoration and brief materialization while the App Adapter owns UI,
+clipboard, file-picker, focus, and feedback behavior.
+
+## Creation brief readiness
+
+Creation brief readiness is the versioned pre-mutation decision contract for
+illustrated stories, photo-led keepsakes, and preserved-photo albums. The
+contract owns blocking fields, concise user questions, recommendations, asset
+needs, and photo/identity boundaries. Both context inspection and the create
+command consume the same assessment; source-asset existence and identity risk
+are derived from the actual source list rather than trusted book-type labels.
+The Creation workshop session decides the book type and photo policy once,
+from the chosen photo use; the brief builder validates that decision against
+the supported book types and renders it instead of inferring it a second time.
+One shared predicate decides whether a source asset entry is well formed; the
+brief builder turns a rejection into a thrown error while readiness turns the
+same rejection into a soft blocker, so the two keep their own control flow.
+
+## Authoring presentation protocol
+
+The Authoring presentation protocol owns one request at a time to show an exact
+frame and prove it was shown. It holds the pending request and its render
+evidence token, decides readiness from a whole pushed observation of the
+surface, records the visible frame as revision-bound render evidence, and
+settles the calling Site Tool within a bounded timeout. The Reader shell and
+the WebMCP tool catalog are Adapters: they push observations and perform the
+view changes the protocol asks for, and never re-implement the readiness rule.
+
+## Authoring quality lifecycle
+
+The Authoring quality lifecycle is browser-local workflow state beside a
+personal Project artifact. It records the exact creation brief, current-revision
+render evidence, no more than two explicit critique rounds, and the structured
+quality report. The shared rubric separates deterministic document/render
+checks from Agent visual judgment over actual browser frames. Publishing
+revalidates the attestation on both the client and Worker; existing public
+revisions remain readable and recoverable.
+
+Image-led spread provenance keeps two meanings separate: `sourceAssetId` is
+the original full-spread composite used to derive a clean plate, while
+`personalSourceAssetId` records a declared user photo governed by identity and
+source-use policy. A legacy personal Project without lifecycle metadata may
+adopt one readiness-passed brief at its inspected revision; curated samples and
+books that already own a brief cannot be reclassified.
+
+## Project artifact
+
+A Project artifact is the revisioned book document consumed by the editor,
+renderer, persistence, publishing, and shared-reader Adapters. Its Module owns
+location-aware traversal of cover, spread, artwork, element, and frame asset
+references; each Adapter retains its own authorization and trust policy.
+
+## Publishing schema
+
+The immutable, numbered D1 migrations under `app/drizzle` are the deployment
+record for durable book and asset storage. The unbundled Worker keeps the
+equivalent migration-0001 statements at its runtime boundary so a fresh binding
+can serve safely; later schema changes add migrations instead of rewriting that
+baseline. Sites contract tests keep the initial representations aligned and
+prove the migrations are packaged. The cross-resource asset-reference rules —
+the artwork separation vocabulary and one message per finding code — are stated
+once in the Project artifact's contract Module and generated into
+`worker/bookAssetReferenceRules.json`, so the publish boundary re-checks them
+with its own traversal instead of a second hand-copied rule set.
