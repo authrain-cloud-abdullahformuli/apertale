@@ -1,3 +1,4 @@
+{
   "name": "apertale",
   "version": "1.1.0",
   "description": "WebMCP-native interactive living 3D book canvas built with React, Three.js, and WebGL.",
